@@ -2,18 +2,21 @@ import sys
 import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QCheckBox, QPushButton,
-    QSystemTrayIcon, QMenu, QAction
+    QSystemTrayIcon, QMenu, QAction, QFileDialog
 )
 from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt
 from pynput import keyboard
 
-from screen_cleaner.desktop_cleanup import (
+from screen_cleaner.clear_desktop import (
     hide_desktop_icons,
     show_desktop_icons,
     set_blank_wallpaper,
     restore_wallpaper
 )
+import json
+import os
+
 
 class ShushApp(QWidget):
     def __init__(self):
@@ -47,6 +50,16 @@ class ShushApp(QWidget):
 
         self.listener_thread = threading.Thread(target=self.start_hotkey_listener, daemon=True)
         self.listener_thread.start()
+
+        self.load_settings_on_launch()
+
+        self.import_button = QPushButton("import JSON")
+        self.import_button.clicked.connect(self.import_settings)
+        self.layout.addWidget(self.import_button)
+
+        self.export_button = QPushButton("export JSON")
+        self.export_button.clicked.connect(self.export_settings)
+        self.layout.addWidget(self.export_button)
 
     def setup_tray_icon(self):
         self.tray_icon = QSystemTrayIcon(self)
@@ -108,6 +121,39 @@ class ShushApp(QWidget):
             '<alt>+a': self.on_activate
         }) as listener:
             listener.join()
+
+    def load_settings_on_launch(self):
+        try:
+            with open("settings.json", "r") as f:
+                data = json.load(f)
+                self.clear_desktop_checkbox.setChecked(data.get("clear_desktop", False))
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print("error loading settings:", e)
+
+    def import_settings(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Import JSON", "", "JSON Files (*.json)")
+        if file_path:
+            try:
+                with open(file_path, "r") as f:
+                    data = json.load(f)
+                    self.clear_desktop_checkbox.setChecked(data.get("clear_desktop", False))
+            except Exception as e:
+                print("failed to import:", e)
+
+    def export_settings(self):
+        data = {
+            "clear_desktop": self.clear_desktop_checkbox.isChecked()
+        }
+        file_path, _ = QFileDialog.getSaveFileName(self, "Export JSON", "settings.json", "JSON Files (*.json)")
+        if file_path:
+            try:
+                with open(file_path, "w") as f:
+                    json.dump(data, f, indent=2)
+            except Exception as e:
+                print("failed to export:", e)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
