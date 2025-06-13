@@ -1,5 +1,6 @@
 # shush
-
+## soon(tm)
+temporarily abandoned as of 6/12/25
 ##todo
 features:
 - check all/uncheck all
