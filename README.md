@@ -1,7 +1,9 @@
 # shush
-## soon(tm)
+## soon (tm)
+## never (tm)
 temporarily abandoned as of 6/12/25
-##todo
+closed as of 6/14/25
+## todo
 features:
 - check all/uncheck all
 - json loading/save and load json
